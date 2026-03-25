@@ -25,7 +25,7 @@ The only remaining step is the actual deployment of the repository to a cloud pr
     N/A
   </files>
   <action>
-    **Instructions for the User:**
+    **Instruction for the User:**
     1. Initialize a Git repository and commit the project if you haven't already.
     2. Push the code to a GitHub repository.
     3. Log in to your Render or Railway dashboard.
