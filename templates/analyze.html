@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze{% endblock %}
+
+{% block content %}
+<section class="analyze-page container">
+  <div class="page-header animate-in">
+    <h1>Analyze YouTube Comments</h1>
+    <p class="page-subtitle">Paste a YouTube video URL below to run AI toxicity analysis on up to 2,000 comments.</p>
+  </div>
+
+  <div class="card analyze-card animate-in">
+    <form method="POST" action="/analyze" id="analyzeForm">
+      <div class="form-group">
+        <label for="urlInput" class="form-label">YouTube Video URL</label>
+        <input
+          type="url"
+          name="url"
+          id="urlInput"
+          class="form-input"
+          placeholder="https://www.youtube.com/watch?v=..."
+          required
+          autocomplete="off"
+        >
+        <span class="form-hint">Supports youtube.com/watch?v= and youtu.be/ URLs</span>
+      </div>
+
+      {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+      {% endif %}
+
+      <button type="submit" class="btn-primary btn-submit" id="submitBtn">
+        🔍 Analyze Comments
+      </button>
+    </form>
+
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <p class="loading-text" id="loadingText">Fetching comments…</p>
+      <p class="loading-hint">This can take 30–90 seconds for large videos.</p>
+    </div>
+  </div>
+
+  <div class="info-grid container">
+    <div class="card info-card">
+      <h3>📋 What Gets Analyzed</h3>
+      <ul>
+        <li>Up to 2,000 top-level comments</li>
+        <li>6 toxicity scores per comment</li>
+        <li>Overall toxicity percentage</li>
+        <li>Top toxic &amp; threatening comments</li>
+      </ul>
+    </div>
+    <div class="card info-card">
+      <h3>🏷️ Toxicity Categories</h3>
+      <ul>
+        <li>Toxic</li>
+        <li>Severe Toxic</li>
+        <li>Obscene</li>
+        <li>Threat</li>
+        <li>Insult</li>
+        <li>Identity Hate</li>
+      </ul>
+    </div>
+    <div class="card info-card">
+      <h3>⚠️ Requirements</h3>
+      <ul>
+        <li>Video must be public</li>
+        <li>Comments must be enabled</li>
+        <li>Analysis may take 1–2 minutes</li>
+        <li>Results saved to history</li>
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock %}

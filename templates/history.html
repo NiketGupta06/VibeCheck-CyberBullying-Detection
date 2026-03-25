@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}History{% endblock %}
+
+{% block content %}
+<section class="history-page container">
+
+  <div class="page-header animate-in">
+    <h1>Analysis History</h1>
+    <p class="page-subtitle">All past YouTube video analyses are stored below. Click View to reload a dashboard.</p>
+  </div>
+
+  {% if analyses %}
+  <div class="card animate-in">
+    <div class="table-scroll">
+      <table class="data-table" id="historyTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Video</th>
+            <th>Date</th>
+            <th>Comments</th>
+            <th>% Toxic</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in analyses %}
+          <tr>
+            <td class="row-num">{{ loop.index }}</td>
+            <td class="comment-cell">
+              <a href="{{ a.video_url }}" target="_blank" rel="noopener" class="video-link">
+                {{ a.video_title or a.video_url[:60] }}{% if not a.video_title and a.video_url|length > 60 %}…{% endif %}
+              </a>
+            </td>
+            <td>{{ a.analyzed_at }}</td>
+            <td>{{ a.total_comments }}</td>
+            <td>
+              <span class="score-badge {% if a.toxic_percent > 30 %}badge-danger{% elif a.toxic_percent > 10 %}badge-warning{% else %}badge-success{% endif %}">
+                {{ a.toxic_percent }}%
+              </span>
+            </td>
+            <td>
+              <a href="/dashboard?id={{ a.id }}" class="btn-primary btn-sm">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="card empty-state animate-in">
+    <div class="empty-icon">📭</div>
+    <h2>No analyses yet</h2>
+    <p>You haven't analyzed any videos yet. Start with a YouTube URL — results will appear here.</p>
+    <a href="/analyze" class="btn-primary">🔍 Analyze a Video</a>
+  </div>
+  {% endif %}
+
+</section>
+{% endblock %}

@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-page container">
+
+  <div class="page-header animate-in">
+    <div>
+      <h1>Toxicity Dashboard</h1>
+      <p class="page-subtitle">
+        <a href="{{ video_url }}" target="_blank" rel="noopener" class="video-link">📺 {{ video_title }}</a>
+        &nbsp;·&nbsp; Analyzed {{ analyzed_at }}
+      </p>
+    </div>
+    <a href="/download{% if analysis_id %}?id={{ analysis_id }}{% endif %}" class="btn-primary btn-download">
+      ⬇ Download Report
+    </a>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stat-grid animate-in">
+    <div class="stat-card">
+      <span class="stat-number" data-count="{{ total_comments }}">0</span>
+      <span class="stat-label">Comments Analyzed</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number toxic-color" data-count="{{ toxic_percent }}">0</span>
+      <span class="stat-label">Toxic Comments (%)</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" style="font-size:1.25rem">{{ top_category or '—' }}</span>
+      <span class="stat-label">Top Category</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">{{ comment_rows | length }}</span>
+      <span class="stat-label">Rows in Table</span>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card chart-card animate-in">
+    <h2 class="card-title">Category Distribution</h2>
+    <div class="chart-wrapper">
+      <canvas id="toxicityChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Top Tables -->
+  <div class="top-tables-grid">
+    <div class="card animate-in">
+      <h2 class="card-title">🔥 Top 5 Most Toxic</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Comment</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_comments %}
+          <tr>
+            <td class="comment-cell">{{ row.comment[:120] }}{% if row.comment|length > 120 %}…{% endif %}</td>
+            <td>
+              {% set score = row.toxicity_score %}
+              <span class="score-badge {% if score > 0.7 %}badge-danger{% elif score > 0.4 %}badge-warning{% else %}badge-success{% endif %}">
+                {{ "%.2f"|format(score) }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card animate-in">
+      <h2 class="card-title">⚠️ Top 5 Threats</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Comment</th>
+            <th>Threat Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in top_threats %}
+          <tr>
+            <td class="comment-cell">{{ row.comment[:120] }}{% if row.comment|length > 120 %}…{% endif %}</td>
+            <td>
+              {% set score = row.threat %}
+              <span class="score-badge {% if score > 0.7 %}badge-danger{% elif score > 0.4 %}badge-warning{% else %}badge-success{% endif %}">
+                {{ "%.2f"|format(score) }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Full Comment Table -->
+  <div class="card animate-in">
+    <h2 class="card-title">💬 All Comments (Top 50 by Toxicity)</h2>
+    <div class="table-scroll">
+      <table class="data-table" id="commentTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Comment</th>
+            <th>Toxicity</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in comment_rows %}
+          <tr id="row-{{ loop.index }}">
+            <td class="row-num">{{ loop.index }}</td>
+            <td class="comment-cell">{{ row.comment[:200] }}{% if row.comment|length > 200 %}…{% endif %}</td>
+            <td>
+              {% set score = row.toxicity_score %}
+              <span class="score-badge {% if score > 0.7 %}badge-danger{% elif score > 0.4 %}badge-warning{% else %}badge-success{% endif %}">
+                {{ "%.2f"|format(score) }}
+              </span>
+            </td>
+            <td class="action-cell">
+              <button class="btn-flag btn-action" onclick="flagRow('row-{{ loop.index }}', this)">🚩 Flag</button>
+              <button class="btn-hide-row btn-action" onclick="hideRow('row-{{ loop.index }}', this)">👁 Hide</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Chart.js — category distribution bar chart
+  const chartData = {{ chart_data | tojson }};
+  const labels = Object.keys(chartData).map(k => k.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()));
+  const values = Object.values(chartData);
+
+  new Chart(document.getElementById('toxicityChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Average Score',
+        data: values,
+        backgroundColor: [
+          'rgba(255,77,109,0.7)',
+          'rgba(239,68,68,0.7)',
+          'rgba(251,191,36,0.7)',
+          'rgba(239,68,68,0.6)',
+          'rgba(168,139,250,0.7)',
+          'rgba(108,99,255,0.7)',
+        ],
+        borderColor: [
+          '#ff4d6d','#ef4444','#fbbf24','#ef4444','#a78bfa','#6c63ff'
+        ],
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` Score: ${ctx.parsed.y.toFixed(4)}`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true, max: 1 }
+      }
+    }
+  });
+
+  function flagRow(rowId, btn) {
+    const row = document.getElementById(rowId);
+    row.classList.toggle('flagged');
+    btn.textContent = row.classList.contains('flagged') ? '✅ Flagged' : '🚩 Flag';
+  }
+
+  function hideRow(rowId, btn) {
+    const row = document.getElementById(rowId);
+    row.classList.toggle('hidden-row');
+    btn.textContent = row.classList.contains('hidden-row') ? '👁 Show' : '👁 Hide';
+  }
+</script>
+{% endblock %}

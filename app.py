@@ -1,0 +1,337 @@
+import os
+import json
+from datetime import datetime
+
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from googleapiclient.discovery import build
+import torch
+import pandas as pd
+from dotenv import load_dotenv
+import io
+
+import database
+
+# ── Load environment ─────────────────────────────────────────────────────────
+load_dotenv()
+
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-please-change")
+
+# ── Model config ─────────────────────────────────────────────────────────────
+MODEL_PATH = "toxic_bert"
+
+print("Loading ToxicBERT model...")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
+model.eval()
+print("Model loaded.")
+
+LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
+
+# ── YouTube API ───────────────────────────────────────────────────────────────
+YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY")
+
+
+def get_video_id(url: str):
+    """Extract video ID from a YouTube URL."""
+    if not url:
+        return None
+    if "watch?v=" in url:
+        return url.split("watch?v=")[1].split("&")[0]
+    if "youtu.be/" in url:
+        vid = url.split("youtu.be/")[1]
+        return vid.split("?")[0]
+    return None
+
+
+def get_video_title(video_id: str) -> str:
+    """Fetch the video title from YouTube API."""
+    try:
+        youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+        response = youtube.videos().list(part="snippet", id=video_id).execute()
+        items = response.get("items", [])
+        if items:
+            return items[0]["snippet"]["title"]
+    except Exception:
+        pass
+    return "Unknown Title"
+
+
+def get_comments(video_id: str, max_comments: int = 2000) -> list:
+    """Fetch up to max_comments top-level comments for a YouTube video."""
+    youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
+    comments = []
+    next_page = None
+
+    while len(comments) < max_comments:
+        req = youtube.commentThreads().list(
+            part="snippet",
+            videoId=video_id,
+            maxResults=min(100, max_comments - len(comments)),
+            pageToken=next_page,
+            textFormat="plainText",
+        )
+        response = req.execute()
+
+        for item in response.get("items", []):
+            text = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+            comments.append(text)
+            if len(comments) >= max_comments:
+                break
+
+        next_page = response.get("nextPageToken")
+        if not next_page:
+            break
+
+    return comments
+
+
+def predict(comment: str) -> dict:
+    """Run ToxicBERT inference on a single comment. Returns dict of 6 label scores."""
+    inputs = tokenizer(
+        comment,
+        return_tensors="pt",
+        truncation=True,
+        padding=True,
+        max_length=512,
+    )
+    with torch.no_grad():
+        outputs = model(**inputs)
+    probs = torch.sigmoid(outputs.logits)[0]
+    return {label: float(probs[i]) for i, label in enumerate(LABELS)}
+
+
+# ── In-memory dashboard cache (per analysis session) ─────────────────────────
+_dashboard_cache: dict = {}
+
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+
+@app.route("/", methods=["GET"])
+def home():
+    return render_template("index.html")
+
+
+@app.route("/analyze", methods=["GET", "POST"])
+def analyze():
+    if request.method == "GET":
+        return render_template("analyze.html")
+
+    # POST — run analysis
+    url = request.form.get("url", "").strip()
+
+    if not url:
+        flash("Please enter a YouTube URL.", "error")
+        return render_template("analyze.html", error="Please enter a YouTube URL.")
+
+    video_id = get_video_id(url)
+    if not video_id:
+        flash("Invalid YouTube URL. Please enter a valid link.", "error")
+        return render_template("analyze.html", error="Invalid YouTube URL.")
+
+    if not YOUTUBE_API_KEY:
+        flash("YouTube API key not configured.", "error")
+        return render_template("analyze.html", error="YouTube API key not configured.")
+
+    try:
+        # Fetch comments
+        comments = get_comments(video_id, max_comments=2000)
+        if not comments:
+            flash("No comments found or comments are disabled for this video.", "error")
+            return render_template("analyze.html", error="No comments found.")
+
+        # Run inference
+        results = []
+        for c in comments:
+            p = predict(c)
+            results.append(p)
+
+        df = pd.DataFrame(results)
+        df["comment"] = comments
+
+        # Overall toxicity score (sum of all label scores)
+        df["toxicity_score"] = df[LABELS].sum(axis=1)
+
+        # Statistics
+        total_comments = len(df)
+        toxic_percent = round(float((df["toxic"] > 0.5).mean() * 100), 1)
+        category_means = {k: round(float(v), 4) for k, v in df[LABELS].mean().to_dict().items()}
+
+        top_toxic = (
+            df.sort_values("toxicity_score", ascending=False)
+            .head(5)[["comment", "toxicity_score"]]
+            .to_dict(orient="records")
+        )
+        top_threats = (
+            df.sort_values("threat", ascending=False)
+            .head(5)[["comment", "threat"]]
+            .to_dict(orient="records")
+        )
+        comment_rows = (
+            df.sort_values("toxicity_score", ascending=False)
+            .head(50)[["comment", "toxicity_score"] + LABELS]
+            .to_dict(orient="records")
+        )
+
+        # Fetch video title
+        video_title = get_video_title(video_id)
+
+        # Save to DB
+        analysis_id = database.save_analysis(
+            video_url=url,
+            video_id=video_id,
+            video_title=video_title,
+            total_comments=total_comments,
+            toxic_percent=toxic_percent,
+            results_json=json.dumps(comment_rows),
+        )
+
+        # Cache for this session
+        dashboard_data = {
+            "analysis_id": analysis_id,
+            "video_url": url,
+            "video_id": video_id,
+            "video_title": video_title,
+            "total_comments": total_comments,
+            "toxic_percent": toxic_percent,
+            "chart_data": category_means,
+            "top_category": _get_top_category(category_means),
+            "top_comments": top_toxic,
+            "top_threats": top_threats,
+            "comment_rows": comment_rows,
+            "analyzed_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        }
+        _dashboard_cache["latest"] = dashboard_data
+
+        return redirect(url_for("dashboard"))
+
+    except Exception as e:
+        error_msg = str(e)
+        if "quotaExceeded" in error_msg or "forbidden" in error_msg.lower():
+            msg = "YouTube API quota exceeded. Please try again tomorrow."
+        elif "videoNotFound" in error_msg or "commentsDisabled" in error_msg:
+            msg = "This video is private, not found, or has comments disabled."
+        else:
+            msg = f"Analysis failed: {error_msg}"
+        flash(msg, "error")
+        return render_template("analyze.html", error=msg)
+
+
+@app.route("/dashboard", methods=["GET"])
+def dashboard():
+    analysis_id = request.args.get("id")
+
+    if analysis_id:
+        # Load from DB (history view)
+        row = database.get_analysis_by_id(int(analysis_id))
+        if not row:
+            flash("Analysis not found.", "error")
+            return redirect(url_for("history"))
+        comment_rows = json.loads(row["results_json"]) if row["results_json"] else []
+        computed_chart = _compute_chart_data(comment_rows)
+        data = {
+            "analysis_id": row["id"],
+            "video_url": row["video_url"],
+            "video_id": row["video_id"],
+            "video_title": row["video_title"] or "Unknown",
+            "total_comments": row["total_comments"],
+            "toxic_percent": row["toxic_percent"],
+            "chart_data": computed_chart,
+            "top_category": _get_top_category(computed_chart),
+            "top_comments": sorted(comment_rows, key=lambda x: x.get("toxicity_score", 0), reverse=True)[:5],
+            "top_threats": sorted(comment_rows, key=lambda x: x.get("threat", 0), reverse=True)[:5],
+            "comment_rows": comment_rows[:50],
+            "analyzed_at": row["analyzed_at"],
+        }
+    else:
+        # Load from session cache
+        data = _dashboard_cache.get("latest")
+        if not data:
+            flash("No analysis found. Please analyze a video first.", "error")
+            return redirect(url_for("analyze"))
+        data["top_category"] = _get_top_category(data.get("chart_data", {}))
+
+    return render_template("dashboard.html", **data)
+
+
+def _compute_chart_data(comment_rows: list) -> dict:
+    """Recompute category means from stored comment rows."""
+    if not comment_rows:
+        return {label: 0 for label in LABELS}
+    df = pd.DataFrame(comment_rows)
+    means = {}
+    for label in LABELS:
+        if label in df.columns:
+            means[label] = round(float(df[label].mean()), 4)
+        else:
+            means[label] = 0
+    return means
+
+
+def _get_top_category(chart_data: dict) -> str:
+    """Return the label name with the highest average score."""
+    if not chart_data:
+        return "—"
+    top = max(chart_data, key=chart_data.get)
+    return top.replace("_", " ").title()
+
+
+@app.route("/history", methods=["GET"])
+def history():
+    analyses = database.get_all_analyses()
+    return render_template("history.html", analyses=analyses)
+
+
+@app.route("/about", methods=["GET"])
+def about():
+    return render_template("about.html")
+
+
+@app.route("/contact", methods=["GET"])
+def contact():
+    return render_template("contact.html")
+
+
+@app.route("/download", methods=["GET"])
+def download():
+    data = _dashboard_cache.get("latest")
+    analysis_id = request.args.get("id")
+
+    if analysis_id:
+        row = database.get_analysis_by_id(int(analysis_id))
+        if row and row["results_json"]:
+            comment_rows = json.loads(row["results_json"])
+            video_id = row["video_id"]
+        else:
+            flash("No data to download.", "error")
+            return redirect(url_for("history"))
+    elif data:
+        comment_rows = data.get("comment_rows", [])
+        video_id = data.get("video_id", "unknown")
+    else:
+        flash("No analysis data to download.", "error")
+        return redirect(url_for("analyze"))
+
+    df = pd.DataFrame(comment_rows)
+    date_str = datetime.now().strftime("%Y%m%d")
+    filename = f"cyberguard_report_{video_id}_{date_str}.csv"
+
+    buf = io.StringIO()
+    df.to_csv(buf, index=False)
+    buf.seek(0)
+
+    return send_file(
+        io.BytesIO(buf.getvalue().encode()),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+# ── Startup ───────────────────────────────────────────────────────────────────
+
+database.init_db()
+
+if __name__ == "__main__":
+    app.run(debug=True)

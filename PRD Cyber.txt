@@ -1,0 +1,180 @@
+You need to create 3 different files as stated.
+
+Command 1 - Create a PRD text file 
+
+
+Cyberbullying Detection on Social Media
+
+Problem Description -
+Cyberbullying on social media platforms causes psychological harm and violates user safety. Manual monitoring is inefficient due to the large volume of user-generated content. This project aims to develop an automated system that detects cyberbullying text in social media posts and comments using natural language processing and machine learning techniques. The system classifies content as bullying or non-bullying and helps platforms take preventive actions.
+Objectives
+Understand cybersecurity issues related to online harassment
+
+Learn text preprocessing and NLP techniques
+
+Apply machine learning for classification problems
+
+Gain experience in secure and ethical data handling
+Proposed Solution
+A web-based application that analyzes social media text and flags cyberbullying content, along with a trained ML model and project documentation.
+Technology Stack
+Python, NLP, Machine Learning, Flask
+
+I have made a model which is inside "toxic_bert", using pretrained model. 
+Now i need a frontend to showcase this
+
+## 3. Goals & Objectives
+- I want a frontend website which needs to be deployed using flask. There should be a input box where the user can put their youtube link, and a whole dashboard is created about all the comments under those videos. It should show all the important details in the dashboard, and a downloadable report
+The user can flag the comments or hide all the negative comments all together whichever is possible without violating any conducts. 
+I also want a database where the history can be saved and past reports, and youtube video links the user put
+The website needs to be responsive and animated which looks good
+
+### User Goals
+- A clean good looking UI
+- Interactive website
+- Easy to read and understand report and dashboard
+- I as a user can put a link and i get to see all the negative comments and hide or report it because i don't like to see them
+- I don't want negative comments under my video
+
+## 4. Success Metrics
+- A dashboard is created
+- correct downloadable report is created automatically
+
+## 5. Target Users & Personas
+This website is for those youtube users who are affected by online cyberbullying and who don't want to see those comments anymore under their video
+
+
+## 6. Features & Requirements
+### Must-Have Features (P0)
+1. **[Feature Name]**
+   - Description: [What it does]
+   - User Story: As a [user], I want [goal] so that [benefit]
+   - Acceptance Criteria:
+     - [ ] [Specific, testable criterion]
+     - [ ] [Specific, testable criterion]
+   - Success Metric: [How you measure this feature's success]
+
+2. [Repeat for each P0 feature]
+
+### Should-Have Features (P1)
+[Same format]
+
+### Nice-to-Have Features (P2)
+[Same format]
+
+## 7. Explicitly OUT OF SCOPE
+- No need to add signup or login
+- [Thing 2 you will NOT build]
+[This section is critical—prevents AI from adding features you never requested]
+
+## 8. User Scenarios
+### Scenario 1: [Name]
+- **Context**: [When does this happen?]
+- **Steps**: 
+  1. [User action]
+  2. [System response]
+  3. [User action]
+- **Expected Outcome**: [What success looks like]
+- **Edge Cases**: [What could go wrong?]
+
+## 9. Dependencies & Constraints
+- **Technical Constraints**: [Platform limits, API restrictions, etc.]
+- **Business Constraints**: [Budget, timeline, team size]
+- **External Dependencies**: [Third-party services, APIs]
+
+## 10. Timeline & Milestones
+- **MVP**: [Date] - [Features included]
+- **V1.0**: [Date] - [Features included]
+
+## 11. Risks & Assumptions
+### Risks
+- [Risk 1 and mitigation strategy]
+
+### Assumptions
+- [Assumption 1 and validation plan]
+
+## 12. Non-Functional Requirements
+- **Performance**: [Load time, concurrent users]
+- **Security**: [Authentication, data protection]
+- **Accessibility**: [WCAG compliance level]
+- **Scalability**: [Expected growth]
+
+## 13. References & Resources
+- [Links to research, competitor analysis, user interviews]
+
+Website Design - 
+It needs to be multi page website, In the homepage there should be the introduction of the project and a get started button. 
+There should be about page and contact us page.
+There should be box where the user can put the youtube link and then download a report
+There should be a dashboard where all the details can be seen
+
+
+Command 2 - Create App flow 
+
+Create comprehensive Application Flow documentation (APP_FLOW.md) for [YOUR APP NAME].
+
+Context:
+[Provide brief description of app]
+
+Generate documentation with these sections:
+
+1. ENTRY POINTS
+List all ways users can enter the app:
+- Direct URL access
+- Deep links (email, notifications)
+- OAuth/social login
+- Search engines
+- Marketing campaigns
+
+2. CORE USER FLOWS
+For each major user task, create a detailed flow:
+
+Required Flows:
+- User onboarding/registration
+- Main feature usage (e.g., create post, make purchase, book appointment)
+- Account management
+- Error recovery
+
+For EACH flow, document:
+
+**HAPPY PATH** (Step-by-step):
+- Page/Screen name
+- UI elements present
+- User actions (clicks, inputs)
+- System responses
+- Validation rules
+- Next page/state
+- Success criteria
+
+**ERROR STATES** (What can go wrong):
+- Invalid inputs (how they're handled)
+- System errors (display and recovery)
+- Timeout scenarios
+- Offline behavior
+
+**EDGE CASES**:
+- User abandons flow
+- User goes back
+- Concurrent actions
+- Session expiry
+
+3. NAVIGATION MAP
+Create a hierarchical tree showing:
+- Main navigation structure
+- Sub-pages and nesting
+- Cross-links between sections
+- Authentication requirements per page
+
+4. SCREEN INVENTORY
+For each unique screen/page, specify:
+- URL/Route
+- Access level (public/authenticated/admin)
+- Purpose
+- Key UI elements
+- Available actions → where they lead
+- State variants (loading, empty, error, success)
+
+5. DECISION POINTS
+Document every conditional in the flow using IF-THEN logic:
+
+Command 3 - Make a tech stack with versions text file

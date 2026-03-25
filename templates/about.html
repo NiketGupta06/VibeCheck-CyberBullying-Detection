@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}About{% endblock %}
+
+{% block content %}
+<section class="about-page container">
+
+  <div class="page-header animate-in">
+    <h1>About CyberGuard</h1>
+    <p class="page-subtitle">An AI-powered tool for detecting cyberbullying and toxic content in YouTube comments.</p>
+  </div>
+
+  <div class="about-grid">
+
+    <div class="card animate-in">
+      <div class="about-icon">🛡️</div>
+      <h2>The Problem</h2>
+      <p>YouTube comment sections are fertile ground for harassment, hate speech, and coordinated abuse. Manual moderation is slow, expensive, and inconsistent. CyberGuard automates toxicity detection at scale — surfacing the worst comments instantly so creators and researchers can act fast.</p>
+    </div>
+
+    <div class="card animate-in" style="animation-delay:0.1s">
+      <div class="about-icon">🧠</div>
+      <h2>The Model — ToxicBERT</h2>
+      <p>CyberGuard uses a BERT (<code>bert-base-uncased</code>) model fine-tuned on the <strong>Jigsaw Toxic Comment Classification</strong> dataset. The model scores each comment across 6 toxicity categories:</p>
+      <ul class="label-list">
+        <li><span class="badge badge-danger">Toxic</span></li>
+        <li><span class="badge badge-danger">Severe Toxic</span></li>
+        <li><span class="badge badge-warning">Obscene</span></li>
+        <li><span class="badge badge-danger">Threat</span></li>
+        <li><span class="badge badge-warning">Insult</span></li>
+        <li><span class="badge badge-warning">Identity Hate</span></li>
+      </ul>
+      <p>Each score is a sigmoid probability (0–1). A score above 0.5 indicates the label is predicted positive.</p>
+    </div>
+
+    <div class="card animate-in" style="animation-delay:0.2s">
+      <div class="about-icon">⚙️</div>
+      <h2>Tech Stack</h2>
+      <ul class="tech-list">
+        <li>🐍 <strong>Python / Flask</strong> — web framework</li>
+        <li>🤗 <strong>HuggingFace Transformers</strong> — model serving</li>
+        <li>🔥 <strong>PyTorch</strong> — inference engine</li>
+        <li>📺 <strong>YouTube Data API v3</strong> — comment fetching</li>
+        <li>📊 <strong>Chart.js</strong> — interactive visualizations</li>
+        <li>🗄️ <strong>SQLite</strong> — analysis history storage</li>
+        <li>🚀 <strong>Gunicorn</strong> — production WSGI server</li>
+      </ul>
+    </div>
+
+    <div class="card animate-in" style="animation-delay:0.3s">
+      <div class="about-icon">⚠️</div>
+      <h2>Limitations</h2>
+      <ul>
+        <li>Analysis is limited to <strong>top-level comments</strong> (no reply threads)</li>
+        <li>YouTube API quota limits may restrict large-scale use</li>
+        <li>The model was trained on English text — performance may degrade on other languages</li>
+        <li>AI scores are probabilistic guidance, not definitive verdicts</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Contact{% endblock %}
+
+{% block content %}
+<section class="contact-page container">
+
+  <div class="page-header animate-in">
+    <h1>Contact Us</h1>
+    <p class="page-subtitle">Have feedback, a bug report, or questions about CyberGuard? Reach out below.</p>
+  </div>
+
+  <div class="contact-layout">
+
+    <div class="card contact-card animate-in" id="contactFormCard">
+      <h2>Send a Message</h2>
+      <form id="contactForm">
+        <div class="form-group">
+          <label for="contactName" class="form-label">Name</label>
+          <input type="text" id="contactName" class="form-input" placeholder="Your name" required>
+        </div>
+        <div class="form-group">
+          <label for="contactEmail" class="form-label">Email</label>
+          <input type="email" id="contactEmail" class="form-input" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="contactMessage" class="form-label">Message</label>
+          <textarea id="contactMessage" class="form-input form-textarea" rows="5" placeholder="Describe your feedback or issue…" required></textarea>
+        </div>
+        <button type="submit" class="btn-primary btn-submit">📨 Send Message</button>
+      </form>
+      <div class="contact-success" id="contactSuccess" style="display:none;">
+        <div class="success-icon">✅</div>
+        <h3>Message Sent!</h3>
+        <p>Thanks for reaching out! We'll be in touch.</p>
+      </div>
+    </div>
+
+    <div class="contact-info animate-in" style="animation-delay:0.1s">
+      <div class="card info-card">
+        <div class="about-icon">🐛</div>
+        <h3>Bug Reports</h3>
+        <p>Found something broken? Describe the steps to reproduce and we'll investigate promptly.</p>
+      </div>
+      <div class="card info-card">
+        <div class="about-icon">💡</div>
+        <h3>Feature Requests</h3>
+        <p>Ideas for improvement? Suggest new toxicity views, export formats, or UI features.</p>
+      </div>
+      <div class="card info-card">
+        <div class="about-icon">🤝</div>
+        <h3>Research Collaboration</h3>
+        <p>Conducting content moderation research? We're open to academic partnerships.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
