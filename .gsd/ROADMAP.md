@@ -63,3 +63,10 @@
 - Deployed to Render/Railway with persistent SQLite disk
 - `Procfile` + env vars configured on host
 - Public URL working and shareable
+
+---
+
+### Phase 5: PDF Report Generation
+**Status**: ✅ Complete  
+**Objective**: Create a downloadable PDF report with embedded graphs, numerical stats, and visual insights based on the analysis. The report should contain everything a user might need and understand everything from reading that report only.  
+**Depends on**: Phase 4

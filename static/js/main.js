@@ -150,3 +150,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
+// ── 8. PDF Export ──────────────────────────────────────────────
+window.downloadPDF = function() {
+  const element = document.getElementById('report-content');
+  if (!element) return;
+  
+  // Add class to hide UI elements during export
+  document.body.classList.add('pdf-exporting');
+  
+  const opt = {
+    margin:       10,
+    filename:     'CyberGuard_Report.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1200 },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  
+  // Generate PDF
+  html2pdf().set(opt).from(element).save().then(() => {
+    // Remove class to restore UI elements
+    document.body.classList.remove('pdf-exporting');
+  });
+};

@@ -743,3 +743,30 @@ code {
   .stat-grid { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: 1fr; }
 }
+
+/* ── 27. PDF Export Mode ──────────────────────────────────────── */
+.pdf-exporting .navbar,
+.pdf-exporting .btn-download,
+.pdf-exporting .btn-action,
+.pdf-exporting .action-cell,
+.pdf-exporting th:last-child {
+  display: none !important;
+}
+.pdf-exporting .page-header {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.pdf-exporting .main-content {
+  padding-top: 0 !important;
+}
+.pdf-exporting {
+  background: var(--bg-primary) !important;
+}
+.pdf-exporting .card {
+  box-shadow: none !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  break-inside: avoid;
+}
+.pdf-exporting .table-scroll {
+  overflow: visible !important;
+}
