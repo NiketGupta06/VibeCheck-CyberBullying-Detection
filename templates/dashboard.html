@@ -48,11 +48,19 @@
     </div>
   </div>
 
-  <!-- Chart -->
-  <div class="card chart-card animate-in">
-    <h2 class="card-title">Category Distribution</h2>
-    <div class="chart-wrapper">
-      <canvas id="toxicityChart"></canvas>
+  <!-- Charts -->
+  <div class="top-tables-grid">
+    <div class="card chart-card animate-in">
+      <h2 class="card-title">Category Distribution</h2>
+      <div class="chart-wrapper">
+        <canvas id="toxicityChart"></canvas>
+      </div>
+    </div>
+    <div class="card chart-card animate-in">
+      <h2 class="card-title">Toxicity Ratio</h2>
+      <div class="chart-wrapper">
+        <canvas id="ratioChart"></canvas>
+      </div>
     </div>
   </div>
 
@@ -189,6 +197,32 @@
       scales: {
         x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
         y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true, max: 1 }
+      }
+    }
+  });
+
+  // Chart.js — Toxicity Ratio Doughnut
+  const totalComments = parseInt("{{ total_comments }}") || 0;
+  const toxicPercent = parseFloat("{{ toxic_percent }}") || 0;
+  const toxicCount = Math.round((toxicPercent / 100) * totalComments);
+  const safeCount = totalComments - toxicCount;
+
+  new Chart(document.getElementById('ratioChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Toxic/Threat', 'Clean'],
+      datasets: [{
+        data: [toxicCount, safeCount],
+        backgroundColor: ['rgba(255,77,109,0.8)', 'rgba(52,211,153,0.8)'],
+        borderColor: ['#ff4d6d', '#34d399'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
       }
     }
   });

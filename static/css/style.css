@@ -745,6 +745,17 @@ code {
 }
 
 /* ── 27. PDF Export Mode ──────────────────────────────────────── */
+.pdf-exporting {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --border: #e2e8f0;
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
 .pdf-exporting .navbar,
 .pdf-exporting .btn-download,
 .pdf-exporting .btn-action,
@@ -759,14 +770,19 @@ code {
 .pdf-exporting .main-content {
   padding-top: 0 !important;
 }
-.pdf-exporting {
-  background: var(--bg-primary) !important;
-}
 .pdf-exporting .card {
   box-shadow: none !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.pdf-exporting .card, 
+.pdf-exporting .stat-card, 
+.pdf-exporting tr {
+  page-break-inside: avoid;
   break-inside: avoid;
 }
 .pdf-exporting .table-scroll {
   overflow: visible !important;
+}
+.pdf-exporting .data-table td, 
+.pdf-exporting .data-table th {
+  padding: 0.5rem 0.75rem !important;
 }
