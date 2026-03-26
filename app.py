@@ -2,8 +2,11 @@ import os
 import json
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify, session
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import Flow
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import torch
 import pandas as pd
@@ -15,8 +18,15 @@ import database
 # ── Load environment ─────────────────────────────────────────────────────────
 load_dotenv()
 
+# Allow OAuth over HTTP for local development
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-please-change")
+
+@app.context_processor
+def inject_auth():
+    return dict(is_authenticated='credentials' in session)
 
 # ── Model config ─────────────────────────────────────────────────────────────
 MODEL_PATH = "toxic_bert"
@@ -75,8 +85,11 @@ def get_comments(video_id: str, max_comments: int = 2000) -> list:
         response = req.execute()
 
         for item in response.get("items", []):
-            text = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-            comments.append(text)
+            t_comment = item["snippet"]["topLevelComment"]
+            comments.append({
+                "id": t_comment["id"],
+                "text": t_comment["snippet"]["textDisplay"]
+            })
             if len(comments) >= max_comments:
                 break
 
@@ -136,19 +149,23 @@ def analyze():
 
     try:
         # Fetch comments
-        comments = get_comments(video_id, max_comments=2000)
-        if not comments:
+        fetched_data = get_comments(video_id, max_comments=2000)
+        if not fetched_data:
             flash("No comments found or comments are disabled for this video.", "error")
             return render_template("analyze.html", error="No comments found.")
 
         # Run inference
         results = []
-        for c in comments:
+        comments_texts = [c["text"] for c in fetched_data]
+        comments_ids = [c["id"] for c in fetched_data]
+
+        for c in comments_texts:
             p = predict(c)
             results.append(p)
 
         df = pd.DataFrame(results)
-        df["comment"] = comments
+        df["comment"] = comments_texts
+        df["comment_id"] = comments_ids
 
         # Overall toxicity score (sum of all label scores)
         df["toxicity_score"] = df[LABELS].sum(axis=1)
@@ -170,7 +187,7 @@ def analyze():
         )
         comment_rows = (
             df.sort_values("toxicity_score", ascending=False)
-            .head(50)[["comment", "toxicity_score"] + LABELS]
+            .head(50)[["comment_id", "comment", "toxicity_score"] + LABELS]
             .to_dict(orient="records")
         )
 
@@ -291,6 +308,110 @@ def about():
 @app.route("/contact", methods=["GET"])
 def contact():
     return render_template("contact.html")
+
+
+# ── OAuth 2.0 ────────────────────────────────────────────────────────────────
+
+@app.route("/login")
+def login():
+    client_secrets_file = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS_FILE", "client_secrets.json")
+    if not os.path.exists(client_secrets_file):
+        flash("YouTube login is not configured on this server (missing client_secrets.json).", "error")
+        return redirect(url_for("home"))
+    
+    flow = Flow.from_client_secrets_file(
+        client_secrets_file,
+        scopes=["https://www.googleapis.com/auth/youtube.force-ssl"]
+    )
+    flow.redirect_uri = "http://localhost:5000/oauth2callback"
+    authorization_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true"
+    )
+    session["state"] = state
+    return redirect(authorization_url)
+
+
+@app.route("/oauth2callback")
+def oauth2callback():
+    client_secrets_file = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS_FILE", "client_secrets.json")
+    state = session.get("state")
+    if not state:
+        return redirect(url_for("home"))
+
+    flow = Flow.from_client_secrets_file(
+        client_secrets_file,
+        scopes=["https://www.googleapis.com/auth/youtube.force-ssl"],
+        state=state
+    )
+    flow.redirect_uri = "http://localhost:5000/oauth2callback"
+
+    authorization_response = request.url
+
+    # OAUTHLIB_INSECURE_TRANSPORT is set at app startup for local dev
+
+    try:
+        flow.fetch_token(authorization_response=authorization_response)
+        credentials = flow.credentials
+        session["credentials"] = {
+            "token": credentials.token,
+            "refresh_token": credentials.refresh_token,
+            "token_uri": credentials.token_uri,
+            "client_id": credentials.client_id,
+            "client_secret": credentials.client_secret,
+            "scopes": credentials.scopes
+        }
+        flash("Successfully connected to YouTube!", "success")
+    except Exception as e:
+        flash(f"OAuth failed: {e}", "error")
+
+    return redirect(url_for("home"))
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been signed out.", "success")
+    return redirect(url_for("home"))
+
+
+@app.route("/api/moderate", methods=["POST"])
+def moderate():
+    if not session.get("credentials"):
+        return jsonify({"error": "Unauthorized. Please sign in with YouTube."}), 401
+
+    data = request.get_json()
+    if not data or "comment_id" not in data or "action" not in data:
+        return jsonify({"error": "Invalid request"}), 400
+
+    comment_id = data["comment_id"]
+    action = data["action"]
+
+    creds_data = session["credentials"]
+    credentials = Credentials(
+        token=creds_data.get("token"),
+        refresh_token=creds_data.get("refresh_token"),
+        token_uri=creds_data.get("token_uri"),
+        client_id=creds_data.get("client_id"),
+        client_secret=creds_data.get("client_secret"),
+        scopes=creds_data.get("scopes")
+    )
+
+    try:
+        youtube = build("youtube", "v3", credentials=credentials)
+        if action == "delete" or action == "reject":
+            # Video owners can only reject/hide comments, not truly delete them.
+            # comments.delete() only works for comments YOU authored.
+            youtube.comments().setModerationStatus(id=comment_id, moderationStatus="rejected").execute()
+        else:
+            return jsonify({"error": "Invalid moderation action"}), 400
+
+        return jsonify({"success": True})
+    except Exception as e:
+        error_msg = str(e)
+        if "forbidden" in error_msg.lower() or "403" in error_msg:
+            return jsonify({"error": "Forbidden. You can only moderate comments on your own videos."}), 403
+        return jsonify({"error": f"YouTube API Error: {error_msg}"}), 500
 
 
 @app.route("/download", methods=["GET"])

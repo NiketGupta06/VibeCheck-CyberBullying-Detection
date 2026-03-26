@@ -70,3 +70,16 @@
 **Status**: ✅ Complete  
 **Objective**: Create a downloadable PDF report with embedded graphs, numerical stats, and visual insights based on the analysis. The report should contain everything a user might need and understand everything from reading that report only.  
 **Depends on**: Phase 4
+
+---
+
+### Phase 6: Active Comment Moderation (YouTube OAuth)
+**Status**: ✅ Complete  
+**Objective**: Enable the video owner to authenticate via YouTube OAuth and actively moderate comments by hiding or deleting them natively on YouTube directly from the dashboard.  
+**Depends on**: Phase 5
+
+**Tasks**:
+- [ ] TBD (run `/plan 6` to create)
+
+**Verification**:
+- TBD

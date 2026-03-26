@@ -142,8 +142,7 @@
               </span>
             </td>
             <td class="action-cell">
-              <button class="btn-flag btn-action" onclick="flagRow('row-{{ loop.index }}', this)">🚩 Flag</button>
-              <button class="btn-hide-row btn-action" onclick="hideRow('row-{{ loop.index }}', this)">👁 Hide</button>
+              <button class="btn-hide-row btn-action" onclick="moderateComment('{{ row.comment_id }}', 'row-{{ loop.index }}', 'reject', this)">👁 Hide on YT</button>
             </td>
           </tr>
           {% endfor %}
@@ -227,16 +226,37 @@
     }
   });
 
-  function flagRow(rowId, btn) {
+  window.moderateComment = async function(commentId, rowId, action, btn) {
     const row = document.getElementById(rowId);
-    row.classList.toggle('flagged');
-    btn.textContent = row.classList.contains('flagged') ? '✅ Flagged' : '🚩 Flag';
-  }
-
-  function hideRow(rowId, btn) {
-    const row = document.getElementById(rowId);
-    row.classList.toggle('hidden-row');
-    btn.textContent = row.classList.contains('hidden-row') ? '👁 Show' : '👁 Hide';
-  }
+    const originalText = btn.textContent;
+    
+    // Set loading state
+    btn.disabled = true;
+    btn.textContent = '⏳ ...';
+    
+    try {
+      const response = await fetch('/api/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment_id: commentId, action: action })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        row.classList.add('flagged');
+        btn.textContent = '✅ Hidden';
+      } else {
+        alert(data.error || 'An error occurred during moderation.');
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error. Please try again.');
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  };
 </script>
 {% endblock %}
