@@ -127,5 +127,15 @@
 **Verification**:
 - [x] Validated Parallax 3D array elements dynamically interpolating CSS translate depth via JS `requestAnimationFrame`. Verified layout rendering logic locally passed without overlap clipping.
 
+---
 
+### Phase 10: Cloud Deployment for free
+**Status**: ⬜ Not Started
+**Objective**: Deploy the application to a free cloud hosting service (e.g., Render, Railway, Hugging Face Spaces) so that it is publicly accessible via a shareable link.
+**Depends on**: Phase 9
 
+**Tasks**:
+- [ ] TBD (run `/plan 10` to create)
+
+**Verification**:
+- TBD
