@@ -1,8 +1,8 @@
 # APP_FLOW.md — Application Flow Documentation
 
-> **App**: CyberGuard — Cyberbullying Detection on YouTube Comments  
+> **App**: VibeCheck — Cyberbullying Detection on YouTube Comments  
 > **Version**: 1.0  
-> **Date**: 2026-03-24
+> **Date**: 2026-03-28
 
 ---
 
@@ -11,11 +11,12 @@
 | Entry Point | Description |
 |---|---|
 | Direct URL `/` | Homepage — main entry, no auth needed |
-| Direct URL `/analyze` | Analysis/input page |
+| Direct URL `/analyze` | Analysis page (shows user's videos if logged in, or URL input) |
 | Direct URL `/dashboard` | Dashboard (redirected here after analysis) |
 | Direct URL `/history` | Past analyses list |
 | Direct URL `/about` | About the project |
 | Direct URL `/contact` | Contact Us page |
+| Direct URL `/login` | initiates Google OAuth2 YouTube sign-in |
 | Search Engines | Homepage indexed via meta tags |
 
 ---
@@ -31,7 +32,8 @@
 | Step | Page | UI Elements | User Action | System Response | Next State |
 |---|---|---|---|---|---|
 | 1 | Homepage (`/`) | Hero section, "Get Started" button | Clicks "Get Started" | Smooth scroll / navigate to analyze | `/analyze` |
-| 2 | Analyze (`/analyze`) | URL input box, Analyze button | Pastes YouTube URL, clicks "Analyze" | Validates URL format | Loading state |
+| 2a | Analyze (`/analyze`) | Pre-populated video grid (if authenticated via YouTube) | Clicks "Analyze" on a specific video | Submits video ID directly | Loading state |
+| 2b | Analyze (`/analyze`) | URL input box (guest fallback) | Pastes link, clicks "Analyze" | Validates URL format | Loading state |
 | 3 | Analyze (loading) | Progress spinner, status text | Waits | Fetches comments via YouTube API → runs ToxicBERT inference | Processing |
 | 4 | Dashboard (`/dashboard`) | Charts, stat cards, comment table, Download button | Reviews dashboard | System renders all data | Active dashboard |
 | 5 | Dashboard | Comment row action buttons | Clicks "Hide" on a comment | Comment is hidden from table view | Updated table |
@@ -101,12 +103,15 @@
 
 ```
 / (Homepage)
-├── /analyze          ← URL input + submit
+├── /login            ← OAuth2 start
+├── /oauth2callback   ← OAuth2 return
+├── /logout           ← Clears session
+├── /analyze          ← Conditional logic (auth'd video grid OR guest URL input)
 │   └── /dashboard    ← Results dashboard (POST result)
 │       └── /download ← Report download
 ├── /history          ← Past analyses
 │   └── /dashboard?id=X ← Cached dashboard view
-├── /about            ← Project info
+├── /about            ← Project info & Team profiles
 └── /contact          ← Contact form
 ```
 
@@ -123,13 +128,14 @@
 
 | Route | Access | Purpose | Key UI Elements | State Variants |
 |---|---|---|---|---|
-| `/` | Public | Homepage / landing page | Hero text, project intro, "Get Started" CTA, feature highlights | Default |
-| `/analyze` | Public | URL input form | Input box, Analyze button, example URL hint | Default, Loading, Error |
-| `/dashboard` | Public (after analysis) | Toxicity analytics dashboard | Stat cards (total, % toxic), bar/radar chart, top toxic comments, top threats, comment table, Download button, Flag/Hide buttons | Loading, Populated, Empty, Error |
-| `/history` | Public | Past analyses list | Sortable table with video title, URL, date, % toxic summary | Empty, Populated |
+| `/` | Public | Homepage / landing page | Hero text, "Get Started" CTA, "How to Use" instructional section | Default |
+| `/login` | Public | Init OAuth flow | Redirects to Google | Navigates |
+| `/analyze` | Public / Auth'd | Video selection / input | Video grid (Auth'd), URL input fallback, Login prompt | Guest, Authenticated, Loading, Error |
+| `/dashboard` | Public (after analysis) | Toxicity analytics dashboard | Stat cards, charts, top toxic comments, Comment action buttons (Hide/Flag) | Loading, Populated, Empty |
+| `/history` | Public | Past analyses list | Sortable table with basic stats | Empty, Populated |
 | `/dashboard?id=X` | Public | Cached past dashboard | Same as `/dashboard` but data from DB | Loaded, Error |
 | `/download` | Public | Report file download | No UI — server sends file | Success, Error |
-| `/about` | Public | Project description | Model info, dataset, tech stack, team | Default |
+| `/about` | Public | Project description | Model info, dataset, tech stack, "Meet the Team" profiles | Default |
 | `/contact` | Public | Contact form | Name, email, message fields, Submit button | Default, Submitted, Error |
 
 ---
@@ -139,7 +145,10 @@
 ```
 User lands on /analyze
   │
-  ├── Submits URL
+  ├── IF Authorized via OAuth → Render Video Grid (User's YouTube Uploads)
+  ├── IF NOT Authorized → Render URL Input Form (with Login Prompt)
+  │
+  ├── User Submits Input (Click Video OR Paste URL)
   │     │
   │     ├── IF URL is invalid → Show validation error → Stay on /analyze
   │     │

@@ -1,5 +1,5 @@
 /**
- * CyberGuard — main.js
+ * VibeCheck — main.js
  * Base interactivity: navbar, loading state, flag/hide, animations, counters, contact form.
  */
 
@@ -161,7 +161,7 @@ window.downloadPDF = function() {
   
   const opt = {
     margin:       10,
-    filename:     'CyberGuard_Report.pdf',
+    filename:     'VibeCheck_Report.pdf',
     image:        { type: 'jpeg', quality: 0.98 },
     html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 1200 },
     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }

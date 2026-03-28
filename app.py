@@ -68,6 +68,44 @@ def get_video_title(video_id: str) -> str:
     return "Unknown Title"
 
 
+def get_user_videos(credentials_dict: dict) -> list:
+    """Fetch user's uploaded videos."""
+    try:
+        credentials = Credentials(
+            token=credentials_dict.get("token"),
+            refresh_token=credentials_dict.get("refresh_token"),
+            token_uri=credentials_dict.get("token_uri"),
+            client_id=credentials_dict.get("client_id"),
+            client_secret=credentials_dict.get("client_secret"),
+            scopes=credentials_dict.get("scopes")
+        )
+        youtube = build("youtube", "v3", credentials=credentials)
+        channels_response = youtube.channels().list(part="contentDetails", mine=True).execute()
+        items = channels_response.get("items", [])
+        if not items:
+            return []
+        uploads_playlist_id = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        
+        playlist_response = youtube.playlistItems().list(
+            part="snippet",
+            playlistId=uploads_playlist_id,
+            maxResults=50
+        ).execute()
+        
+        videos = []
+        for item in playlist_response.get("items", []):
+            snippet = item["snippet"]
+            videos.append({
+                "video_id": snippet["resourceId"]["videoId"],
+                "title": snippet["title"],
+                "thumbnail_url": snippet["thumbnails"].get("medium", {}).get("url", "")
+            })
+        return videos
+    except Exception as e:
+        print(f"Error fetching user videos: {e}")
+        return []
+
+
 def get_comments(video_id: str, max_comments: int = 2000) -> list:
     """Fetch up to max_comments top-level comments for a YouTube video."""
     youtube = build("youtube", "v3", developerKey=YOUTUBE_API_KEY)
@@ -129,10 +167,17 @@ def home():
 @app.route("/analyze", methods=["GET", "POST"])
 def analyze():
     if request.method == "GET":
-        return render_template("analyze.html")
+        videos = []
+        if "credentials" in session:
+            videos = get_user_videos(session["credentials"])
+        return render_template("analyze.html", videos=videos)
 
     # POST — run analysis
     url = request.form.get("url", "").strip()
+    video_id_post = request.form.get("video_id", "").strip()
+
+    if video_id_post:
+        url = f"https://www.youtube.com/watch?v={video_id_post}"
 
     if not url:
         flash("Please enter a YouTube URL.", "error")
@@ -321,7 +366,10 @@ def login():
     
     flow = Flow.from_client_secrets_file(
         client_secrets_file,
-        scopes=["https://www.googleapis.com/auth/youtube.force-ssl"]
+        scopes=[
+            "https://www.googleapis.com/auth/youtube.force-ssl",
+            "https://www.googleapis.com/auth/youtube.readonly"
+        ]
     )
     flow.redirect_uri = "http://localhost:5000/oauth2callback"
     authorization_url, state = flow.authorization_url(
@@ -341,7 +389,10 @@ def oauth2callback():
 
     flow = Flow.from_client_secrets_file(
         client_secrets_file,
-        scopes=["https://www.googleapis.com/auth/youtube.force-ssl"],
+        scopes=[
+            "https://www.googleapis.com/auth/youtube.force-ssl",
+            "https://www.googleapis.com/auth/youtube.readonly"
+        ],
         state=state
     )
     flow.redirect_uri = "http://localhost:5000/oauth2callback"
@@ -436,7 +487,7 @@ def download():
 
     df = pd.DataFrame(comment_rows)
     date_str = datetime.now().strftime("%Y%m%d")
-    filename = f"cyberguard_report_{video_id}_{date_str}.csv"
+    filename = f"vibecheck_report_{video_id}_{date_str}.csv"
 
     buf = io.StringIO()
     df.to_csv(buf, index=False)

@@ -83,3 +83,29 @@
 
 **Verification**:
 - TBD
+
+---
+
+### Phase 7: VibeCheck Rebrand & UX Enhancements
+**Status**: ✅ Complete
+**Objective**: Rebrand the entire app from "CyberGuard" to "VibeCheck — CyberBullying Detection System". Redesign the Analyze page to show the signed-in user's YouTube videos with thumbnails and one-click analyze buttons (falling back to URL paste for guest users). Add a graphical "How to Use" instructional section on the Home page. Redesign the About page with team member profiles (photo, description, LinkedIn, GitHub links).
+**Depends on**: Phase 6
+
+**Tasks**:
+- [ ] TBD (run `/plan 7` to create)
+
+**Verification**:
+- TBD
+
+---
+
+### Phase 8: Update Website UI (Scroll Animations & 3D Elements)
+**Status**: ⬜ Not Started
+**Objective**: Redesign the entire website UI using `web.txt` as a benchmark for aesthetic direction, implementing Tailwind CSS colors, typography, and layout. Introduce scroll animations (AOS or GSAP) and floating 3D elements to make the interface more engaging. Do not include the "Recent Content" section, and preserve all current application wordings.
+**Depends on**: Phase 7
+
+**Tasks**:
+- [ ] TBD (run `/plan 8` to create)
+
+**Verification**:
+- TBD

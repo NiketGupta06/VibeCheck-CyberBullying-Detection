@@ -1,55 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="CyberGuard — AI-powered YouTube comment toxicity analyzer using ToxicBERT.">
-  <title>{% block title %}CyberGuard{% endblock %} — YouTube Toxicity Analyzer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="VibeCheck — AI-powered YouTube comment toxicity analyzer using ToxicBERT.">
+  <title>{% block title %}VibeCheck{% endblock %} — CyberBullying Detection System</title>
+  
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "#fef8f3",
+            "on-surface": "#34322d",
+            "tertiary-dim": "#644e45",
+            "on-tertiary-fixed-variant": "#6f584f",
+            "surface-container-low": "#f8f3ed",
+            "secondary-container": "#ecddfa",
+            "secondary-fixed-dim": "#decfec",
+            "surface-bright": "#fef8f3",
+            "on-primary-fixed": "#2d4529",
+            "surface-dim": "#dfd9d1",
+            "secondary-dim": "#5a4e67",
+            "outline-variant": "#b6b1aa",
+            "primary-container": "#cdebc4",
+            "tertiary": "#715a51",
+            "on-surface-variant": "#625f58",
+            "error": "#a73b21",
+            "inverse-primary": "#d5f4cc",
+            "surface-container-high": "#ede7e0",
+            "on-secondary-container": "#584d65",
+            "on-tertiary-container": "#644f46",
+            "primary-dim": "#40593c",
+            "tertiary-fixed": "#fedfd3",
+            "primary": "#4c6647",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary-fixed": "#503d34",
+            "primary-fixed-dim": "#bfddb6",
+            "inverse-on-surface": "#a09c98",
+            "surface": "#fef8f3",
+            "on-secondary": "#fef6ff",
+            "on-secondary-fixed": "#453b52",
+            "outline": "#7e7a73",
+            "on-error": "#fff7f6",
+            "secondary-fixed": "#ecddfa",
+            "surface-container": "#f2ede6",
+            "surface-tint": "#4c6647",
+            "on-primary": "#eaffe2",
+            "surface-container-highest": "#e7e2da",
+            "primary-fixed": "#cdebc4",
+            "on-secondary-fixed-variant": "#62576f",
+            "tertiary-fixed-dim": "#efd1c5",
+            "error-dim": "#791903",
+            "on-primary-fixed-variant": "#486244",
+            "on-primary-container": "#3f583a",
+            "secondary": "#665a73",
+            "surface-variant": "#e7e2da",
+            "tertiary-container": "#fedfd3",
+            "error-container": "#fd795a",
+            "inverse-surface": "#0f0e0c",
+            "on-tertiary": "#fff7f5",
+            "on-background": "#34322d",
+            "on-error-container": "#6e1400"
+          },
+          fontFamily: {
+            "headline": ["Noto Serif", "serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "label": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
 
-  <nav class="navbar">
-    <a href="/" class="logo">🛡️ CyberGuard</a>
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
-    <ul class="nav-links" id="navLinks">
-      <li><a href="/" {% if request.path == '/' %}class="active"{% endif %}>Home</a></li>
-      <li><a href="/analyze" {% if request.path == '/analyze' %}class="active"{% endif %}>Analyze</a></li>
-      <li><a href="/history" {% if request.path == '/history' %}class="active"{% endif %}>History</a></li>
-      <li><a href="/about" {% if request.path == '/about' %}class="active"{% endif %}>About</a></li>
-      <li><a href="/contact" {% if request.path == '/contact' %}class="active"{% endif %}>Contact</a></li>
-      <li style="margin-left: 0.5rem; display: flex; align-items: center;">
+  <!-- TopNavBar -->
+  <nav class="fixed top-0 w-full z-50 glass-nav">
+    <div class="flex justify-between items-center px-6 md:px-12 py-6 max-w-[1440px] mx-auto">
+      <a href="/" class="font-headline text-2xl font-semibold text-emerald-900 tracking-tight">
+        VibeCheck
+      </a>
+      <div class="hidden md:flex items-center gap-6 lg:gap-10 font-body font-medium text-base lg:text-lg">
+        <a href="/" class="{% if request.path == '/' %}text-emerald-900 border-b-2 border-emerald-800/30 pb-1{% else %}text-zinc-500 hover:text-emerald-800 transition-colors{% endif %}">Home</a>
+        <a href="/analyze" class="{% if request.path == '/analyze' %}text-emerald-900 border-b-2 border-emerald-800/30 pb-1{% else %}text-zinc-500 hover:text-emerald-800 transition-colors{% endif %}">Analyze</a>
+        <a href="/history" class="{% if request.path == '/history' %}text-emerald-900 border-b-2 border-emerald-800/30 pb-1{% else %}text-zinc-500 hover:text-emerald-800 transition-colors{% endif %}">History</a>
+        <a href="/about" class="{% if request.path == '/about' %}text-emerald-900 border-b-2 border-emerald-800/30 pb-1{% else %}text-zinc-500 hover:text-emerald-800 transition-colors{% endif %}">About</a>
+      </div>
+      <div>
         {% if is_authenticated %}
-          <a href="/logout" class="btn-outline btn-sm" style="border-width: 1px; padding: 0.375rem 0.75rem; font-size: 0.8125rem;">Sign Out</a>
+          <a href="/logout" class="bg-surface-container-highest text-on-surface px-6 lg:px-7 py-2.5 lg:py-3 rounded-full font-medium hover:opacity-90 transition-all scale-95 duration-200 ease-out custom-shadow">Sign Out</a>
         {% else %}
-          <a href="/login" class="btn-primary btn-sm" style="padding: 0.375rem 0.75rem; font-size: 0.8125rem;">Sign In (YT)</a>
+          <a href="/login" class="bg-primary text-on-primary px-6 lg:px-7 py-2.5 lg:py-3 rounded-full font-medium hover:opacity-90 transition-all scale-95 duration-200 ease-out custom-shadow">Sign In (YT)</a>
         {% endif %}
-      </li>
-    </ul>
+      </div>
+    </div>
   </nav>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-      <div class="flash-container">
+      <div class="fixed top-24 right-6 z-[100] flex flex-col gap-2">
         {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% set alert_bg = "bg-primary-container text-on-primary-container" %}
+          {% if category == "error" %}
+            {% set alert_bg = "bg-error-container text-on-error-container" %}
+          {% endif %}
+          <div class="px-6 py-3 rounded-lg shadow-ambient text-sm font-medium {{ alert_bg }}" data-aos="fade-left">
+            {{ message }}
+          </div>
         {% endfor %}
       </div>
     {% endif %}
   {% endwith %}
 
-  <main class="main-content">
+  <main class="flex-grow pt-32 pb-24">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="footer">
-    <p>© 2026 CyberGuard — YouTube Toxicity Analyzer &nbsp;|&nbsp; Powered by ToxicBERT &amp; Flask</p>
+  <!-- Footer -->
+  <footer class="w-full py-16 px-6 md:px-12 bg-surface-container-low mt-auto border-t border-outline-variant/10">
+    <div class="flex flex-col md:flex-row justify-between items-center max-w-[1440px] mx-auto gap-8">
+      <div class="space-y-4 text-center md:text-left">
+        <div class="font-headline text-xl text-emerald-900">VibeCheck</div>
+        <p class="font-body text-sm tracking-wide text-zinc-500 max-w-sm">
+          © 2026 VibeCheck. Mindful intelligence for a safer digital world. Powered by ToxicBERT.
+        </p>
+      </div>
+      <div class="flex flex-wrap justify-center gap-6 lg:gap-10 font-body text-sm tracking-wide">
+        <a href="#" class="text-zinc-500 hover:text-emerald-700 transition-colors underline decoration-emerald-200 underline-offset-4">Privacy Policy</a>
+        <a href="#" class="text-zinc-500 hover:text-emerald-700 transition-colors underline decoration-emerald-200 underline-offset-4">Terms of Service</a>
+        <a href="/contact" class="text-zinc-500 hover:text-emerald-700 transition-colors underline decoration-emerald-200 underline-offset-4">Contact Us</a>
+      </div>
+    </div>
   </footer>
 
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      once: true,
+      offset: 50,
+      duration: 600,
+      easing: 'ease-out-cubic',
+    });
+  </script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}
 </body>
