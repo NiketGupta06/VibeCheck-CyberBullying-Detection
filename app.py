@@ -465,42 +465,6 @@ def moderate():
         return jsonify({"error": f"YouTube API Error: {error_msg}"}), 500
 
 
-@app.route("/download", methods=["GET"])
-def download():
-    data = _dashboard_cache.get("latest")
-    analysis_id = request.args.get("id")
-
-    if analysis_id:
-        row = database.get_analysis_by_id(int(analysis_id))
-        if row and row["results_json"]:
-            comment_rows = json.loads(row["results_json"])
-            video_id = row["video_id"]
-        else:
-            flash("No data to download.", "error")
-            return redirect(url_for("history"))
-    elif data:
-        comment_rows = data.get("comment_rows", [])
-        video_id = data.get("video_id", "unknown")
-    else:
-        flash("No analysis data to download.", "error")
-        return redirect(url_for("analyze"))
-
-    df = pd.DataFrame(comment_rows)
-    date_str = datetime.now().strftime("%Y%m%d")
-    filename = f"vibecheck_report_{video_id}_{date_str}.csv"
-
-    buf = io.StringIO()
-    df.to_csv(buf, index=False)
-    buf.seek(0)
-
-    return send_file(
-        io.BytesIO(buf.getvalue().encode()),
-        mimetype="text/csv",
-        as_attachment=True,
-        download_name=filename,
-    )
-
-
 # ── Startup ───────────────────────────────────────────────────────────────────
 
 database.init_db()

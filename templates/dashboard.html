@@ -3,11 +3,10 @@
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 {% endblock %}
 
 {% block content %}
-<section class="py-24 bg-surface min-h-screen" id="report-content">
+<section class="pt-8 pb-24 bg-surface min-h-screen" id="report-content">
   <div class="max-w-[1440px] mx-auto px-6 md:px-12">
     
     <!-- Header -->
@@ -20,14 +19,6 @@
           <span class="text-outline-variant">•</span>
           Analyzed {{ analyzed_at }}
         </p>
-      </div>
-      <div class="flex gap-4">
-        <button onclick="downloadPDF()" class="bg-surface-container-high text-on-surface px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-surface-container-highest transition-colors shadow-sm flex items-center gap-2" id="pdfBtn">
-          <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span> PDF
-        </button>
-        <a href="/download{% if analysis_id %}?id={{ analysis_id }}{% endif %}" class="bg-primary text-on-primary px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity flex items-center gap-2 custom-shadow">
-          <span class="material-symbols-outlined text-[18px]">download</span> CSV
-        </a>
       </div>
     </div>
 
@@ -93,7 +84,7 @@
                 <td class="py-4 px-2">
                   {% set score = row.toxicity_score %}
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {% if score > 0.7 %}bg-error/10 text-error{% elif score > 0.4 %}bg-amber-500/10 text-amber-700{% else %}bg-primary/10 text-primary{% endif %}">
-                    {{ "%.2f"|format(score) }}
+                    {{ "%.4f"|format(score) }}
                   </span>
                 </td>
               </tr>
@@ -123,7 +114,7 @@
                 <td class="py-4 px-2">
                   {% set score = row.threat %}
                   <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {% if score > 0.7 %}bg-error/10 text-error{% elif score > 0.4 %}bg-amber-500/10 text-amber-700{% else %}bg-primary/10 text-primary{% endif %}">
-                    {{ "%.2f"|format(score) }}
+                    {{ "%.4f"|format(score) }}
                   </span>
                 </td>
               </tr>
@@ -157,7 +148,7 @@
               <td class="py-4 px-4">
                 {% set score = row.toxicity_score %}
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold {% if score > 0.7 %}bg-error/10 text-error{% elif score > 0.4 %}bg-amber-500/10 text-amber-700{% else %}bg-primary/10 text-primary{% endif %}">
-                  {{ "%.2f"|format(score) }}
+                  {{ "%.4f"|format(score) }}
                 </span>
               </td>
               <td class="py-4 px-4">
