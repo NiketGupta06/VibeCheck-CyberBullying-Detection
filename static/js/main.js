@@ -65,23 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── 4. Scroll animations via IntersectionObserver ─────────────
-  const observerTargets = document.querySelectorAll('.card, .stat-card, .animate-in');
-  if ('IntersectionObserver' in window && observerTargets.length > 0) {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.animationPlayState = 'running';
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-
-    observerTargets.forEach(el => {
-      el.style.animationPlayState = 'paused';
-      observer.observe(el);
-    });
-  }
+  // Scroll animations handled by AOS library in base.html
 
   // ── 5. Animated number counters ───────────────────────────────
   function animateCounter(el, target, duration = 1500) {
@@ -149,9 +133,56 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ── 8. Global 3D Parallax (Mouse & Scroll) ─────────────────────────
+  const parallaxElements = document.querySelectorAll('.parallax-element');
+  if (parallaxElements.length > 0) {
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let scrollY = window.scrollY;
+    let isTicking = false;
+
+    function updateParallax() {
+      parallaxElements.forEach(el => {
+        const speedX = parseFloat(el.getAttribute('data-speed-x')) || 0;
+        const speedY = parseFloat(el.getAttribute('data-speed-y')) || 0;
+        
+        // Calculate offset based on center of screen for mouse
+        const xOffset = (mouseX - window.innerWidth / 2) * speedX;
+        const yOffset = (mouseY - window.innerHeight / 2) * speedY;
+        
+        // Calculate scroll offset (scroll moves things, multiply by speed modifier)
+        const scrollOffset = scrollY * (speedY * 2);
+
+        // Apply smooth transition natively or rely on CSS transition if added
+        el.style.transform = `translate3d(${xOffset}px, ${yOffset - scrollOffset}px, 0)`;
+      });
+      isTicking = false;
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (!isTicking) {
+        window.requestAnimationFrame(updateParallax);
+        isTicking = true;
+      }
+    });
+
+    document.addEventListener('scroll', () => {
+      scrollY = window.scrollY;
+      if (!isTicking) {
+        window.requestAnimationFrame(updateParallax);
+        isTicking = true;
+      }
+    });
+    
+    // Initial call
+    updateParallax();
+  }
+
 });
 
-// ── 8. PDF Export ──────────────────────────────────────────────
+// ── 9. PDF Export ──────────────────────────────────────────────
 window.downloadPDF = function() {
   const element = document.getElementById('report-content');
   if (!element) return;
