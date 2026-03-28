@@ -29,9 +29,9 @@ def inject_auth():
     return dict(is_authenticated='credentials' in session)
 
 # ── Model config ─────────────────────────────────────────────────────────────
-MODEL_PATH = "toxic_bert"
+MODEL_PATH = "NiketGupta06/VibeCheck"
 
-print("Loading ToxicBERT model...")
+print("Loading ToxicBERT model from Hugging Face Hub...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
 model.eval()
