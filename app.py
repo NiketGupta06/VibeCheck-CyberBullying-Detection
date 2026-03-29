@@ -18,6 +18,14 @@ import database
 # ── Load environment ─────────────────────────────────────────────────────────
 load_dotenv()
 
+import tempfile
+secret_json_content = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRETS_JSON")
+if secret_json_content:
+    tmp_path = os.path.join(tempfile.gettempdir(), "client_secrets.json")
+    with open(tmp_path, "w") as f:
+        f.write(secret_json_content)
+    os.environ["GOOGLE_OAUTH_CLIENT_SECRETS_FILE"] = tmp_path
+
 # Allow OAuth over HTTP for local development
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
