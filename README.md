@@ -17,11 +17,9 @@
 
 <br/>
 
-### 🌐 [Try the Live Demo →](https://huggingface.co/spaces/NiketGupta06/vibeCheck)
+### 🌐 [Try the Live Demo →](https://niketgupta06-vibecheck.hf.space/)
 
 <br/>
-
-![VibeCheck Banner](static/images/home%20page%20element.png)
 
 </div>
 
