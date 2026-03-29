@@ -39,11 +39,15 @@ def inject_auth():
 # ── Model config ─────────────────────────────────────────────────────────────
 MODEL_PATH = "NiketGupta06/VibeCheck"
 
-print("Loading ToxicBERT model from Hugging Face Hub...")
+print("Loading ToxicBERT model from Hugging Face Hub...", flush=True)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
 model.eval()
-print("Model loaded.")
+print("Model loaded successfully!", flush=True)
+
+# ── Database Init ────────────────────────────────────────────────────────────
+database.init_db()
+print("Database initialized.", flush=True)
 
 LABELS = ["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]
 
@@ -379,7 +383,11 @@ def login():
             "https://www.googleapis.com/auth/youtube.readonly"
         ]
     )
-    flow.redirect_uri = "http://localhost:5000/oauth2callback"
+    # Generate dynamic redirect URI and enforce HTTPS for production
+    redirect_uri = url_for('oauth2callback', _external=True)
+    if "localhost" not in redirect_uri and redirect_uri.startswith("http://"):
+        redirect_uri = redirect_uri.replace("http://", "https://", 1)
+    flow.redirect_uri = redirect_uri
     authorization_url, state = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true"
@@ -403,7 +411,11 @@ def oauth2callback():
         ],
         state=state
     )
-    flow.redirect_uri = "http://localhost:5000/oauth2callback"
+    # Generate dynamic redirect URI and enforce HTTPS for production
+    redirect_uri = url_for('oauth2callback', _external=True)
+    if "localhost" not in redirect_uri and redirect_uri.startswith("http://"):
+        redirect_uri = redirect_uri.replace("http://", "https://", 1)
+    flow.redirect_uri = redirect_uri
 
     authorization_response = request.url
 
