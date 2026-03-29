@@ -159,7 +159,6 @@ Open your browser and go to **[http://localhost:5000](http://localhost:5000)**. 
 
 ## 📸 Screenshots
 
-> *(Add your screenshots here!)*
 
 | Home Page | Analysis Dashboard | Comment Report |
 |---|---|---|
@@ -196,7 +195,7 @@ AI scores are **probabilistic guidance**, not court verdicts. `ToxicBERT` is tra
 
 Leave a ⭐ on the repo! It helps more than you think.
 
-[![GitHub Stars](https://img.shields.io/github/stars/NiketGupta06/vibeCheck?style=social)](https://github.com/NiketGupta06/vibeCheck)
+[![GitHub Stars](https://img.shields.io/github/stars/NiketGupta06/vibeCheck?style=social)](https://github.com/NiketGupta06/VibeCheck-CyberBullying-Detection)
 
 ---
 
