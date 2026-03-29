@@ -163,7 +163,7 @@ Open your browser and go to **[http://localhost:5000](http://localhost:5000)**. 
 
 | Home Page | Analysis Dashboard | Comment Report |
 |---|---|---|
-| ![home](static/images/screenshot_home.png) | ![dashboard](static/images/screenshot_dashboard.png) | ![report](static/images/screenshot_report.png) |
+| ![home](static/images/homepage.png) | ![dashboard](static/images/dashboard.png) | ![report](static/images/hide.png) |
 
 ---
 
