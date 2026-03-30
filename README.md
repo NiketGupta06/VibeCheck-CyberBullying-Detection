@@ -20,7 +20,7 @@
 ### 🌐 [Try the Live Demo →](https://niketgupta06-vibecheck.hf.space/)
 
 <br/>
-
+> **⚠️ Important Notice**: The application's Google OAuth is currently in **developing mode**. When attempting to sign in, Google may display a warning that the **"app isn't verified"**. This is expected behaviour. To access the site, click on **"Advanced"** and then follow the link to proceed. It is completely safe to use.
 </div>
 
 ---
