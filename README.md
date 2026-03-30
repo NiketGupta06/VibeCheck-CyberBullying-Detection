@@ -22,7 +22,7 @@
 <br/>
 
 </div>
-###Important Notice: 
+⚠️ Important Notice: 
 The application's Google OAuth is currently in development mode. When attempting to sign in, Google may display a warning that the **app isn't verified**. This is expected behaviour. To access the site, click Advanced, then follow the link to proceed. It is completely safe to use.
 ---
 
